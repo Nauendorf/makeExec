@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Check for debug
-[[ "$1 $2 $3 $4 $5 $6" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
-[[ $debug ]] && echo "$1 $2 $3 $4 $5 $6"
+[[ "${@: -1}" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
+[[ $debug ]] && echo -e "\e[96m$1 $2 $3 $4 $5 $6"
 
 # Globals
 scriptName="$0"
@@ -34,30 +34,30 @@ then
   linkPath="/usr/bin"
   cp "$self" "$linkPath"
   chmod +x "$linkPath/$scriptName"
-  echo -e "\e[96mMakeExec is now available from anywhere"
+  echo "MakeExec is now available from anywhere"
   exit
-elif [[ $1 == -s ]] && [[ -f /usr/bin/MakeExec ]]
+elif [[ "$1" -eq  "-s" ]] && [[ ! -f "/usr/bin/MakeExec" ]]
 then
   echo -e "\e[93mWarning: MakeExec is already available"
   exit
 fi
 
-if [[ "$1" -eq "-i" ]] && [[ ! -f /usr/bin/$2 ]] && [[ -f "$(pwd)/$2" ]]
+if [[ "$1" -eq "-i" ]] && [[ $2 ]] && [[ -f "$(pwd)/$2" ]]
 then
+  [[ $debug ]] && echo "\e[96mExpecting external file"
   [[ ! $2 ]] && echo -e "\e[31mError: Invalid input file." && exit
-  [[ ! -f "$(pwd)/$2" ]] && echo -e "\e[31mError: Invalid input file." && exit
   shebang=$(head $2 -c3)
   [[ "$shebang" != '#!/' ]] && echo -e "\e[93mWarning: No shebang on input file."
-  [[ -f "$linkPath/$2" ]] && echo -e "\e[93mWarning:$2 is already available" && exit
+  [[ -f "$linkPath/$2" ]] && echo -e "\e[93mWarning: $2 is already available" && exit
+
   file_to_exec=$2
   fullPath="$(pwd)/$file_to_exec"
   chmod +x "$linkPath/$file_to_exec"
   ln --symbolic  "$fullPath" "$linkPath"
-  echo -e "\e[96m$file_to_exec is now available from anywhere"
+  echo "$file_to_exec is now available from anywhere"
   exit
-elif [[ $1 == -i ]] && [[ ! $2 ]]
-then
-  echo -e "\e[31mError: No input file given"
+else
+  echo -e "\e[31mError: Invalid input file"
   exit
 fi
   exit
