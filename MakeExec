@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Check for debug
-[[ "${@: -1}" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
-[[ $debug ]] && echo -e "\e[96mArgs: $1 $2 $3 $4 $5 $6"
-
 # Globals
 scriptName="$0"
 self="$(pwd)/$scriptName"
 linkPath="/usr/bin"
+
+# Check for debug
+[[ "${@: -1}" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
+[[ $debug ]] && echo -e "\e[96mArgs[$#]: $@"
 
 # Help and initial checks
 [[ ! $1 ]] && \
@@ -18,7 +18,7 @@ exit # if no arguments were given
 echo -e "\e[39mUsage: MakeExec -i <script file>  ||  MakeExec -s  ||  MakeExec -i <script file> -l <link path>
   -i      Input file to make executable
   -s      Make self executable  (optional)
-  -l      Change symLink path (optional);
+  -l      Specify symLink path (optional);
           default is /usr/bin" && \
 exit # if only returning help
 [[ ! "$EUID" -eq 0 ]] && \
@@ -40,7 +40,7 @@ then
   exit
 elif ([[ "$1" == '-s' ]] && [[ $2 ]] && [[ ! $debug ]]) || ([[ "$1" == '-s' ]] && [[ $3 ]] && [[ $debug ]])
 then
-   echo -e "\e[31mError: Too many arguments."
+  echo -e "\e[31mError: Too many arguments."
   [[ $debug ]] && echo -e "\e[96mNo argument expected for -s"
   exit 
 elif [[ "$1" == '-s' ]] && [[ -f "/usr/bin/MakeExec" ]]
@@ -52,28 +52,31 @@ fi
 
 if [[ "$1" == '-i' ]] && [[ $2 ]] && [[ -f "$(pwd)/$2" ]]
 then
+  # TO DO: add support for -l option.
+  file_to_exec=$2
+  fullPath="$(pwd)/$file_to_exec"
+
   [[ $debug ]] && echo -e "\e[96mTargeting file at $(pwd)/$2."
   [[ ! $2 ]] && echo -e "\e[31mError: Invalid input file." && exit
   [[ -f "$linkPath/$2" ]] && echo -e "\e[93mWarning: $2 is already available" && exit
   [[ "$(head $2 -c3)" != '#!/' ]] && echo -e "\e[93mWarning: No shebang on input file." && \
-  read -p "Would you like to add a shebang now? This will update file ctime. [y/n]: " yn
+  read -p "Would you like to add a shebang now? This will update file ctime. [y/n]: " yn_add
+  [[ "$yn_add" == "y" ]] && read -p "Enter path to interpreter: " shebangPath
+  [[ $shebangPath ]] && echo -e "#!$shebangPath\n$(cat $fullPath)" > $fullPath
 
-  file_to_exec=$2
-  fullPath="$(pwd)/$file_to_exec"
   chmod +x "$fullPath"
   ln --symbolic  "$fullPath" "$linkPath"
-  echo "$file_to_exec is now available from anywhere"
+  echo -e "\e[39m$file_to_exec is now available from anywhere"
   [[ $debug ]] && echo -e "\e[96mSuccess."
   exit
-elif [[ "$1" == '-i' ]] && [[ ! $2 ]] && [[ ! -f "$(pwd)/$2" ]]
+elif [[ "$1" == '-i' ]] && [[ $2 ]] && [[ ! -f "$(pwd)/$2" ]]
 then
   echo -e "\e[31mError: Invalid input file or missing argument"
   [[ $debug ]] && echo -e "\e[96mNo file found at $(pwd)/$2."
   exit
-elif ([[ "$1" == '-i' ]] && [[ $2 ]] && [[ ! $debug ]]) || ([[ "$1" == '-i' ]] && [[ $3 ]] && [[ $debug ]])
+elif ([[ "$1" == '-i' ]] && [[ ! $debug ]] && [[ $# > 2 ]]) || ([[ "$1" == '-i' ]] && [[ $debug ]] && [[ $# > 3 ]])
 then
-   echo -e "\e[31mError: Too many arguments."
-  [[ $debug ]] && echo -e "\e[96mNo argument expected for -s"
+  echo -e "\e[31mError: Too many arguments."
+  [[ $debug ]] && echo -e "\e[96mNo argument expected for -i"
   exit 
 fi
-
