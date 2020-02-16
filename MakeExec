@@ -24,7 +24,7 @@ exit # if only returning help
 [[ ! "$EUID" -eq 0 ]] && \
 echo -e "\e[93mWarning: Insufficient Permissions. Try sudo." && \
 exit # if sudo not given
-[[ $1 == -l ]] && \rm
+[[ $1 == -l ]] && \
 echo -e "\e[93mWarning: This option can only be used with -i." && \
 exit # if -l in wrong position
 
@@ -38,7 +38,7 @@ then
   echo -e "\e[39mMakeExec is now available from anywhere"
   [[ $debug ]] && echo -e "\e[96mSuccess."
   exit
-elif ([[ "$1" == '-s' ]] && [[ $2 ]] && [[ ! $debug ]]) || ([[ "$1" == '-s' ]] && [[ $3 ]] && [[ $debug ]])
+elif ([[ "$1" == '-s' ]] && [[ ! $debug ]] && [[ $# > 2 ]]) || ([[ "$1" == '-s' ]] && [[ $debug ]] && [[ $# > 4 ]])
 then
   echo -e "\e[31mError: Too many arguments."
   [[ $debug ]] && echo -e "\e[96mNo argument expected for -s"
