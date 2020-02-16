@@ -2,7 +2,7 @@
 
 # Check for debug
 [[ "${@: -1}" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
-[[ $debug ]] && echo -e "\e[96m$1 $2 $3 $4 $5 $6"
+[[ $debug ]] && echo -e "\e[96mArgs: $1 $2 $3 $4 $5 $6"
 
 # Globals
 scriptName="$0"
@@ -15,7 +15,7 @@ echo -e "\e[93mNo argument given.
 Use -h for help." && \
 exit # if no arguments were given
 [[ $1 == -h ]] && \
-echo -e " Usage: MakeExec -i <script file>  ||  MakeExec -s  ||  MakeExec -i <script file> -l <link path>
+echo -e "\e[39mUsage: MakeExec -i <script file>  ||  MakeExec -s  ||  MakeExec -i <script file> -l <link path>
   -i      Input file to make executable
   -s      Make self executable  (optional)
   -l      Change symLink path (optional);
@@ -29,35 +29,51 @@ echo -e "\e[93mWarning: This option can only be used with -i." && \
 exit # if -l in wrong position
 
 ##  __Main__  ##
-if [[ "$1" -eq  "-s" ]] && [[ ! -f "/usr/bin/MakeExec" ]]
+if [[ "$1" ==  '-s' ]] && [[ ! -f "/usr/bin/MakeExec" ]]
 then
+  [[ $debug ]] && echo -e "\e[96mTargeting self."
   linkPath="/usr/bin"
   cp "$self" "$linkPath"
   chmod +x "$linkPath/$scriptName"
-  echo "MakeExec is now available from anywhere"
+  echo -e "\e[39mMakeExec is now available from anywhere"
+  [[ $debug ]] && echo -e "\e[96mSuccess."
   exit
-elif [[ "$1" -eq  "-s" ]] && [[ ! -f "/usr/bin/MakeExec" ]]
+elif ([[ "$1" == '-s' ]] && [[ $2 ]] && [[ ! $debug ]]) || ([[ "$1" == '-s' ]] && [[ $3 ]] && [[ $debug ]])
+then
+   echo -e "\e[31mError: Too many arguments."
+  [[ $debug ]] && echo -e "\e[96mNo argument expected for -s"
+  exit 
+elif [[ "$1" == '-s' ]] && [[ -f "/usr/bin/MakeExec" ]]
 then
   echo -e "\e[93mWarning: MakeExec is already available"
+  [[ $debug ]] && echo -e "\e[96mFound MakeExec in /usr/bin."
   exit
 fi
 
-if [[ "$1" -eq "-i" ]] && [[ $2 ]] && [[ -f "$(pwd)/$2" ]]
+if [[ "$1" == '-i' ]] && [[ $2 ]] && [[ -f "$(pwd)/$2" ]]
 then
-  [[ $debug ]] && echo "\e[96mExpecting external file"
+  [[ $debug ]] && echo -e "\e[96mTargeting file at $(pwd)/$2."
   [[ ! $2 ]] && echo -e "\e[31mError: Invalid input file." && exit
-  shebang=$(head $2 -c3)
-  [[ "$shebang" != '#!/' ]] && echo -e "\e[93mWarning: No shebang on input file."
   [[ -f "$linkPath/$2" ]] && echo -e "\e[93mWarning: $2 is already available" && exit
+  [[ "$(head $2 -c3)" != '#!/' ]] && echo -e "\e[93mWarning: No shebang on input file." && \
+  read -p "Would you like to add a shebang now? This will update file ctime. [y/n]: " yn
 
   file_to_exec=$2
   fullPath="$(pwd)/$file_to_exec"
-  chmod +x "$linkPath/$file_to_exec"
+  chmod +x "$fullPath"
   ln --symbolic  "$fullPath" "$linkPath"
   echo "$file_to_exec is now available from anywhere"
+  [[ $debug ]] && echo -e "\e[96mSuccess."
   exit
-else
-  echo -e "\e[31mError: Invalid input file"
+elif [[ "$1" == '-i' ]] && [[ ! $2 ]] && [[ ! -f "$(pwd)/$2" ]]
+then
+  echo -e "\e[31mError: Invalid input file or missing argument"
+  [[ $debug ]] && echo -e "\e[96mNo file found at $(pwd)/$2."
   exit
+elif ([[ "$1" == '-i' ]] && [[ $2 ]] && [[ ! $debug ]]) || ([[ "$1" == '-i' ]] && [[ $3 ]] && [[ $debug ]])
+then
+   echo -e "\e[31mError: Too many arguments."
+  [[ $debug ]] && echo -e "\e[96mNo argument expected for -s"
+  exit 
 fi
-  exit
+
