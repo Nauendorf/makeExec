@@ -64,7 +64,7 @@ then
   [[ $debug ]] && echo -e "\e[96mTargeting file at $(pwd)/$2."
   [[ ! $2 ]] && echo -e "\e[31mError: Invalid input file." && exit
   [[ -f "$linkPath/$2" ]] && echo -e "\e[93mWarning: $2 is already available" && exit
-  [[ "$(head $2 -c3)" != '#!/' ]] && echo -e "\e[93mWarning: No shebang on input file." && \
+  [[ "$(head $2 -c3)" != '#!/' ]] && [[ `file $2` != *"executable"* ]] && echo -e "\e[93mWarning: No shebang on input file." && \
   read -p "Would you like to add a shebang now? [y/n]: " yn_add
   [[ "$yn_add" == "y" ]] && read -p "Enter path to interpreter: " shebangPath
   [[ $shebangPath ]] && echo -e "#!$shebangPath\n$(cat $fullPath)" > $fullPath
@@ -88,3 +88,4 @@ then
 fi
 
 echo -e "\e[31mError: Unexpected argument"
+
