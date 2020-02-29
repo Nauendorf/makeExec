@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Globals
+scriptName="$0"
+self="$(pwd)/$scriptName"
+linkPath="/usr/bin"
+MEpath="/usr/bin/MakeExec"
+
+# Check for debug
+[[ "${@: -1}" =~ (^|[[:space:]])"--debug"($|[[:space:]]) ]] && debug=1
+[[ $debug ]] && echo -e "\e[96mArgs[$#]: $@"
+
+options=$(getopt -o dv --long debug --long name: -- "$@")
+
+echo $options
